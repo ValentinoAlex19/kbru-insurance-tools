@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0F3B40">
-    <title>KBRU Insurance Document Analyzer & TC Comparison Tools</title>
-    
+    <title>KBRU Insurance Document Analyzer & TC Comparison Tools</title>    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -68,12 +67,19 @@
 <body class="bg-mist text-ink font-sans antialiased min-h-screen">
 
     <header class="sticky top-0 z-30 bg-pine text-white border-b-2 border-brass">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 min-h-[64px] flex items-center justify-between gap-3">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 min-h-[64px] flex flex-wrap items-center justify-between gap-3 py-3">
             <div>
                 <h1 class="font-serif text-base sm:text-xl font-semibold leading-tight">KBRU Insurance Intelligent Tools</h1>
                 <p class="hidden sm:block text-xs text-pine-tint/80 mt-0.5">Analisis perbandingan TC, Quotation, dan Master Binder Asuransi.</p>
             </div>
-            <button type="button" id="openHistoryBtn" class="lg:hidden px-4 py-2 rounded-lg bg-white/10 text-sm font-semibold">Riwayat</button>
+            
+            <div class="flex items-center gap-2">
+                <!-- Tombol Mode Non-AI yang Dibuat Lebih Unik & Kontras -->
+                <a href="/non-ai-compare" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brass hover:bg-brass-light text-pine-dark text-xs sm:text-sm font-bold shadow-md transition-all transform hover:-translate-y-0.5">
+                    <span>⚡ Buka Mode Perbandingan Non-AI</span>
+                </a>
+                <button type="button" id="openHistoryBtn" class="lg:hidden px-4 py-2 rounded-lg bg-white/10 text-sm font-semibold">Riwayat</button>
+            </div>
         </div>
     </header>
 

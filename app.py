@@ -1,4 +1,6 @@
 import os
+import difflib
+import pdfplumber
 import re
 import time
 import uuid
@@ -620,5 +622,55 @@ def history_delete_all():
         cur = c.execute("DELETE FROM history WHERE client_id=?", (g.client_id,))
     return jsonify({"ok": True, "deleted": cur.rowcount})
 
+# --- FITUR TAMBAHAN: NON-AI INSTANT COMPARISON ---
+@app.route('/non-ai-compare', methods=['GET', 'POST'])
+def non_ai_compare():
+    diff_html = None
+    error_msg = None
+    stats = None
+
+    if request.method == 'POST':
+        file_a = request.files.get('file_a')
+        file_b = request.files.get('file_b')
+
+        if not file_a or not file_b:
+            error_msg = "Harap unggah kedua file dokumen (Dokumen A dan Dokumen B)."
+        else:
+            try:
+                # Ekstraksi teks dari PDF A
+                text_a = ""
+                with pdfplumber.open(file_a) as pdf:
+                    for page in pdf.pages:
+                        t = page.extract_text()
+                        if t: text_a += t + "\n"
+
+                # Ekstraksi teks dari PDF B
+                text_b = ""
+                with pdfplumber.open(file_b) as pdf:
+                    for page in pdf.pages:
+                        t = page.extract_text()
+                        if t: text_b += t + "\n"
+
+                if not text_a.strip() or not text_b.strip():
+                    error_msg = "Teks tidak dapat diekstrak dari salah satu PDF. Kemungkinan PDF berupa gambar/scan. Gunakan Mode AI untuk dokumen scan."
+                else:
+                    lines_a = text_a.splitlines()
+                    lines_b = text_b.splitlines()
+
+                    # Hitung statistik sederhana perbedaan
+                    differ = difflib.HtmlDiff(wrapcolumn=80)
+                    diff_html = differ.make_file(
+                        lines_a, 
+                        lines_b, 
+                        fromdesc='Dokumen A (Original)', 
+                        todesc='Dokumen B (Pembanding)',
+                        context=True,
+                        numlines=2
+                    )
+            except Exception as e:
+                error_msg = f"Terjadi kesalahan saat memproses file PDF: {str(e)}"
+
+    return render_template('non_ai.html', diff_html=diff_html, error_msg=error_msg)
+    
 if __name__ == '__main__':
     app.run(debug=os.getenv("FLASK_DEBUG") == "1", port=5000)

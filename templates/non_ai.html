@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>KBRU Insurance Tools - Non-AI Instant Compare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card-body table { width: 100% !important; font-family: monospace; font-size: 12px; }
+        .diff_add { background-color: #d1e7dd !important; color: #0f5132; }
+        .diff_chg { background-color: #fff3cd !important; color: #664d03; }
+        .diff_sub { background-color: #f8d7da !important; color: #842029; }
+        /* Merapikan tabel legenda bawaan difflib */
+        .diff table.diff { border: 1px solid #dee2e6; margin-bottom: 1rem; }
+        .diff th { background: #0F3B40; color: white; padding: 4px 8px; }
+        .diff td { padding: 4px 8px; vertical-align: top; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container my-5">
+        <!-- Navigasi Atas -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>KBRU Insurance Tools <span class="badge bg-secondary fs-6">Mode Non-AI (Instant Diff)</span></h2>
+            <div>
+                <a href="/" class="btn btn-outline-primary btn-sm">⬅️ Pindah ke Mode AI Analisis</a>
+            </div>
+        </div>
+
+        <!-- Card Form Upload -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Unggah Dokumen untuk Perbandingan Cepat</h5>
+                {% if error_msg %}
+                    <div class="alert alert-danger">{{ error_msg }}</div>
+                {% endif %}
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="file_a" class="form-label fw-bold">Dokumen A (PDF Asli):</label>
+                            <input class="form-control" type="file" id="file_a" name="file_a" accept=".pdf" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="file_b" class="form-label fw-bold">Dokumen B (PDF Pembanding):</label>
+                            <input class="form-control" type="file" id="file_b" name="file_b" accept=".pdf" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">⚡ Bandingkan Sekarang (Instant)</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Hasil Perbandingan -->
+        {% if diff_html %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <strong>Hasil Perbandingan Dokumen (Baris per Baris)</strong>
+                </div>
+                <div class="card-body bg-white overflow-auto">
+                    {{ diff_html | safe }}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
