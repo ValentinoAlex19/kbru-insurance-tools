@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0F3B40">
+    <title>KBRU Insurance Document Analyzer & TC Comparison Tools</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pine:  { DEFAULT: '#0F3B40', dark: '#0A2B2F', soft: '#1C5359', tint: '#E1EBE9' },
+                        mist:  { DEFAULT: '#EEF3F1', deep: '#DCE6E3' },
+                        line:  '#CBD9D5',
+                        brass: { DEFAULT: '#C9993F', light: '#DDB566', dark: '#8A6420', tint: '#F6ECD5' },
+                        ink:   '#173B3E',
+                        muted: '#506A68',
+                        brick: { DEFAULT: '#9B2C2C', tint: '#FBEDED' }
+                    },
+                    fontFamily: {
+                        sans:  ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+                        serif: ['Literata', 'Georgia', 'serif']
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+
+    <style>
+        :root {
+            --pine: #0F3B40; --pine-tint: #E1EBE9;
+            --mist: #EEF3F1; --line: #CBD9D5; --line-strong: #A9BDB8;
+            --brass: #C9993F; --brass-dark: #8A6420; --brass-tint: #F6ECD5;
+            --ink: #173B3E; --muted: #506A68;
+        }
+        .tool-btn {
+            display: flex; align-items: center; gap: .75rem;
+            width: 100%; min-height: 52px; padding: .7rem 1rem;
+            text-align: left; border: 1.5px solid var(--line); border-radius: .75rem;
+            background: #fff; color: var(--ink); transition: background-color .15s, border-color .15s;
+        }
+        .tool-btn:hover { border-color: var(--line-strong); }
+        .tool-btn .tool-no { font-size: .75rem; color: var(--muted); white-space: nowrap; }
+        .tool-btn .tool-name { font-size: .9rem; font-weight: 600; line-height: 1.3; }
+        .tool-btn[aria-pressed="true"] { background: var(--pine); border-color: var(--pine); color: #fff; }
+        .tool-btn[aria-pressed="true"] .tool-no { color: #DDB566; }
+        
+        .slot { transition: border-color .15s, box-shadow .15s; }
+        .slot.is-filled { border-color: var(--brass); box-shadow: inset 3px 0 0 var(--brass); }
+        
+        .md-body { font-size: .9375rem; line-height: 1.7; color: var(--ink); overflow-x: auto; }
+        .md-body h1, .md-body h2, .md-body h3 { font-family: Literata, Georgia, serif; font-weight: 600; color: var(--pine); margin: 1.4em 0 .45em; }
+        .md-body table { border-collapse: collapse; margin: 1em 0; font-size: .85rem; min-width: 100%; }
+        .md-body th, .md-body td { border: 1px solid var(--line); padding: .55rem .75rem; vertical-align: top; text-align: left; }
+        .md-body th { background: var(--pine-tint); color: var(--pine); font-weight: 600; }
+    </style>
+</head>
+<body class="bg-mist text-ink font-sans antialiased min-h-screen">
+
+    <header class="sticky top-0 z-30 bg-pine text-white border-b-2 border-brass">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 min-h-[64px] flex items-center justify-between gap-3">
+            <div>
+                <h1 class="font-serif text-base sm:text-xl font-semibold leading-tight">KBRU Insurance Intelligent Tools</h1>
+                <p class="hidden sm:block text-xs text-pine-tint/80 mt-0.5">Analisis perbandingan TC, Quotation, dan Master Binder Asuransi.</p>
+            </div>
+            <button type="button" id="openHistoryBtn" class="lg:hidden px-4 py-2 rounded-lg bg-white/10 text-sm font-semibold">Riwayat</button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <div class="lg:col-span-2 min-w-0">
+                <!-- Pilihan Tools -->
+                <section class="mb-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                        <button type="button" data-tool="tool1" aria-pressed="true" class="tool-btn">
+                            <span class="tool-no">Tool 1</span><span class="tool-name">Perbandingan dokumen sejenis</span>
+                        </button>
+                        <button type="button" data-tool="tool2" aria-pressed="false" class="tool-btn">
+                            <span class="tool-no">Tool 2</span><span class="tool-name">Perbandingan dokumen tidak sejenis</span>
+                        </button>
+                        <button type="button" data-tool="tool3" aria-pressed="false" class="tool-btn">
+                            <span class="tool-no">Tool 3</span><span class="tool-name">Validasi Master Binder KBRU</span>
+                        </button>
+                    </div>
+                    <p id="toolDesc" class="mt-3 text-sm text-muted leading-relaxed"></p>
+                </section>
+
+                <!-- Form Upload -->
+                <div class="bg-white rounded-2xl border border-line p-4 sm:p-6 mb-6">
+                    <h2 class="font-serif text-lg font-semibold text-pine mb-1">Dokumen Analisis</h2>
+                    <p id="formSubText" class="text-sm text-muted mb-4"></p>
+
+                    <!-- Khusus Tool 3: Pengelolaan & Pilihan LOB Master Binder -->
+                    <div id="lobSection" class="hidden mb-6 p-4 rounded-xl bg-pine-tint/50 border border-line">
+                        <label class="block text-sm font-semibold text-pine mb-1">Pilih Line of Business (LOB) Master Binder</label>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <select id="lobSelect" class="flex-1 min-w-[200px] text-sm border border-line rounded-lg p-2.5 bg-white"></select>
+                            <button type="button" onclick="toggleNewLobModal(true)" class="px-3 py-2.5 bg-pine text-white text-xs font-semibold rounded-lg hover:bg-pine-dark">+ Tambah LOB / Binder Baru</button>
+                            <button type="button" id="deleteLobBtn" onclick="deleteCurrentLob()" class="px-3 py-2.5 bg-brick text-white text-xs font-semibold rounded-lg hover:bg-red-800">Hapus LOB Ini</button>
+                        </div>
+                        <p id="lobInfo" class="text-xs text-muted mt-2"></p>
+                    </div>
+
+                    <form id="uploadForm" class="space-y-4" novalidate>
+                        <div id="docSlots" class="space-y-3"></div>
+
+                        <label class="flex items-start gap-3 text-sm text-ink cursor-pointer py-1">
+                            <input type="checkbox" id="force" class="mt-0.5 h-5 w-5 shrink-0 accent-pine">
+                            <span>Abaikan riwayat dan analisis ulang (memakai kuota AI)</span>
+                        </label>
+
+                        <button type="submit" id="submitBtn" class="w-full min-h-[52px] rounded-xl bg-brass hover:bg-brass-light text-pine-dark font-bold text-base transition-colors">
+                            Mulai analisis
+                        </button>
+                    </form>
+                </div>
+
+                <div id="errorBox" class="hidden mb-6 bg-brick-tint border border-brick/30 text-brick text-sm rounded-xl p-4"></div>
+
+                <div id="loading" class="hidden text-center px-4 py-8 bg-white rounded-2xl border border-line mb-6">
+                    <div class="inline-block animate-spin rounded-full h-9 w-9 border-4 border-brass border-t-transparent mb-3"></div>
+                    <p id="statusMain" class="text-sm font-semibold text-pine">AI sedang membaca klausul dan menganalisis dokumen...</p>
+                    <p id="statusSub" class="text-xs text-muted mt-1">Mohon tunggu sebentar (biasanya 10-30 detik).</p>
+                </div>
+
+                <div id="resultContainer" class="hidden bg-white rounded-2xl border border-line border-t-4 border-t-brass p-4 sm:p-6">
+                    <div class="flex items-center justify-between pb-4 mb-4 border-b border-line">
+                        <h3 class="font-serif text-xl font-semibold text-pine">Hasil analisis dan kesimpulan</h3>
+                        <button type="button" id="copyBtn" class="px-4 py-2 text-sm font-semibold rounded-lg border border-line text-pine">Salin hasil</button>
+                    </div>
+                    <div id="resultMeta" class="flex flex-wrap gap-2 mb-4 text-xs"></div>
+                    <div id="resultContent" class="md-body"></div>
+                </div>
+            </div>
+
+            <!-- Sidebar Riwayat -->
+            <aside class="lg:col-span-1">
+                <div class="h-full flex flex-col bg-white border border-line rounded-2xl p-4 lg:sticky lg:top-4 lg:max-h-[85vh]">
+                    <h2 class="font-serif text-lg font-semibold text-pine mb-1">Riwayat analisis</h2>
+                    <p class="text-xs text-muted mb-3">Klik untuk melihat hasil sebelumnya.</p>
+                    <ul id="historyList" class="space-y-2 flex-1 overflow-y-auto pr-1"></ul>
+                    <p id="historyEmpty" class="text-xs text-muted text-center py-6">Belum ada riwayat.</p>
+                    <button type="button" id="clearAllBtn" class="hidden mt-3 text-xs font-semibold text-brick hover:underline">Hapus semua riwayat</button>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Modal Tambah / Ganti LOB Master Binder -->
+    <div id="lobModal" class="hidden fixed inset-0 z-50 bg-pine-dark/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full border border-line shadow-xl">
+            <h3 class="font-serif text-lg font-semibold text-pine mb-2">Tambah atau Perbarui Master Binder LOB</h3>
+            <p class="text-xs text-muted mb-4">Jika nama LOB sudah ada, dokumen binder lama akan otomatis diperbarui/diganti dengan yang baru.</p>
+            <div class="space-y-3 mb-4">
+                <div>
+                    <label class="block text-xs font-semibold text-muted mb-1">Nama LOB (Contoh: PAR, MV, Marine Cargo)</label>
+                    <input type="text" id="newLobName" class="w-full text-sm border border-line rounded-lg p-2.5" placeholder="Ketik nama LOB...">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-muted mb-1">File Dokumen Master Binder (PDF/Word)</label>
+                    <input type="file" id="newLobFile" class="w-full text-sm border border-line rounded-lg p-2">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="toggleNewLobModal(false)" class="px-4 py-2 text-sm border border-line rounded-lg">Batal</button>
+                <button type="button" onclick="saveNewLob()" class="px-4 py-2 text-sm bg-brass text-pine-dark font-semibold rounded-lg">Simpan Binder</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TOOLS = {
+            tool1: {
+                short: 'Tool 1',
+                desc: 'Perbandingan dokumen sejenis (mis: Quotation Slip dengan Quotation Slip Renewal).',
+                docs: ['Dokumen 1: Quotation Lama', 'Dokumen 2: Quotation Renewal', 'Dokumen 3: Dokumen tambahan (opsional)']
+            },
+            tool2: {
+                short: 'Tool 2',
+                desc: 'Perbandingan dokumen tidak sejenis (mis: Quotation Slip dengan Cover Note atau dengan Polis/Policy).',
+                docs: ['Dokumen 1: Quotation', 'Dokumen 2: Cover Note / Polis', 'Dokumen 3: Dokumen pendukung (opsional)']
+            },
+            tool3: {
+                short: 'Tool 3',
+                desc: 'Perbandingan dokumen dengan binder asuransi yang telah sepakat dengan KBRU.',
+                docs: ['Dokumen 2: Quotation Asuransi Utama (Wajib)', 'Dokumen 3: Quotation Pembanding / Lainnya (Opsional)']
+            }
+        };
+
+        let currentTool = 'tool1';
+        let lobsData = [];
+        let currentResultText = '';
+        const $ = id => document.getElementById(id);
+
+        async function fetchLobs() {
+            try {
+                const res = await fetch('/api/lobs');
+                lobsData = await res.json();
+                const sel = $('lobSelect');
+                sel.innerHTML = '';
+                if (lobsData.length === 0) {
+                    sel.innerHTML = '<option value="">Belum ada LOB tersimpan. Klik "+ Tambah LOB"</option>';
+                    $('lobInfo').textContent = 'Belum ada master binder yang tersimpan.';
+                } else {
+                    lobsData.forEach(l => {
+                        const opt = document.createElement('option');
+                        opt.value = l.lob_name;
+                        opt.textContent = `${l.lob_name} (File: ${l.filename})`;
+                        sel.appendChild(opt);
+                    });
+                    updateLobInfo();
+                }
+            } catch(e) {}
+        }
+
+        function updateLobInfo() {
+            const val = $('lobSelect').value;
+            const found = lobsData.find(l => l.lob_name === val);
+            if (found) {
+                $('lobInfo').textContent = `Master binder aktif: ${found.filename} (Disimpan pada ${new Date(found.created_at).toLocaleDateString('id-ID')})`;
+            }
+        }
+
+        $('lobSelect').addEventListener('change', updateLobInfo);
+
+        function toggleNewLobModal(show) {
+            $('lobModal').classList.toggle('hidden', !show);
+            if (show) $('newLobName').value = '';
+        }
+
+        async function saveNewLob() {
+            const name = $('newLobName').value.trim();
+            const file = $('newLobFile').files[0];
+            if (!name || !file) {
+                alert('Nama LOB dan file Master Binder wajib diisi.');
+                return;
+            }
+            const fd = new FormData();
+            fd.append('lob_name', name);
+            fd.append('binder_file', file);
+            try {
+                const res = await fetch('/api/lobs', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (res.ok) {
+                    toggleNewLobModal(false);
+                    await fetchLobs();
+                    $('lobSelect').value = name;
+                    updateLobInfo();
+                    alert(`Master Binder untuk LOB "${name}" berhasil disimpan/diperbarui!`);
+                } else {
+                    alert(data.error || 'Gagal menyimpan LOB');
+                }
+            } catch(e) {
+                alert('Terjadi kesalahan koneksi.');
+            }
+        }
+
+        async function deleteCurrentLob() {
+            const val = $('lobSelect').value;
+            if (!val) {
+                alert('Pilih LOB yang ingin dihapus terlebih dahulu.');
+                return;
+            }
+            if (!confirm(`Hapus Master Binder untuk LOB "${val}"? Tindakan ini tidak dapat dibatalkan.`)) return;
+            try {
+                const res = await fetch('/api/lobs/' + encodeURIComponent(val), { method: 'DELETE' });
+                if (res.ok) {
+                    await fetchLobs();
+                    alert('Master Binder berhasil dihapus.');
+                } else {
+                    alert('Gagal menghapus binder.');
+                }
+            } catch(e) {
+                alert('Terjadi kesalahan koneksi.');
+            }
+        }
+
+        function buildSlots() {
+            const wrap = $('docSlots');
+            wrap.innerHTML = '';
+            const startIdx = currentTool === 'tool3' ? 2 : 1;
+            for (let i = startIdx; i <= 3; i++) {
+                const card = document.createElement('div');
+                card.className = 'slot rounded-xl border border-line bg-white p-3 sm:p-4';
+                const docLabel = TOOLS[currentTool].docs[i - (currentTool === 'tool3' ? 2 : 1)];
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-semibold text-ink">${docLabel}</span>
+                    </div>
+                    <input type="file" id="file-${i}" name="file${i}" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg" class="w-full text-sm border border-line rounded-lg p-2 bg-mist/50">`;
+                wrap.appendChild(card);
+            }
+        }
+
+        function setTool(type) {
+            currentTool = type;
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.setAttribute('aria-pressed', String(btn.dataset.tool === type));
+            });
+            const cfg = TOOLS[type];
+            $('toolDesc').textContent = cfg.desc;
+            $('formSubText').textContent = type === 'tool3' 
+                ? 'Pilih LOB Master Binder tersimpan, lalu unggah Quotation Utama untuk divalidasi.' 
+                : 'Unggah dokumen pembanding sesuai ketentuan tool.';
+            
+            $('lobSection').classList.toggle('hidden', type !== 'tool3');
+            if (type === 'tool3') fetchLobs();
+            buildSlots();
+        }
+
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', () => setTool(btn.dataset.tool));
+        });
+
+        // Form Submit
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const fd = new FormData();
+            fd.append('tool_type', currentTool);
+
+            if (currentTool === 'tool3') {
+                const lobName = $('lobSelect').value;
+                if (!lobName) {
+                    alert('Silakan pilih LOB Master Binder terlebih dahulu.');
+                    return;
+                }
+                fd.append('lob_name', lobName);
+            }
+
+            const startIdx = currentTool === 'tool3' ? 2 : 1;
+            for (let i = startIdx; i <= 3; i++) {
+                const f = $(`file-${i}`)?.files[0];
+                if (f) fd.append('file' + i, f);
+            }
+
+            $('resultContainer').classList.add('hidden');
+            $('loading').classList.remove('hidden');$('submitBtn').disabled = true;
+
+            try {
+                const res = await fetch('/api/analyze', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (res.ok) {
+                    showResult(data);
+                    loadHistory();
+                } else {
+                    alert(data.error || 'Terjadi kesalahan sistem');
+                }
+            } catch(e) {
+                alert('Gagal terhubung ke server.');
+            } finally {
+                $('loading').classList.add('hidden');$('submitBtn').disabled = false;
+            }
+        });
+
+        function showResult(item) {
+            currentResultText = item.result || '';
+            $('resultContent').innerHTML = marked.parse(currentResultText);
+            $('resultContainer').classList.remove('hidden');$('resultContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        $('copyBtn').addEventListener('click', async () => {
+            await navigator.clipboard.writeText(currentResultText);
+            $('copyBtn').textContent = 'Tersalin!';
+            setTimeout(() => $('copyBtn').textContent = 'Salin hasil', 1500);
+        });
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/api/history');
+                const items = await res.json();
+                const list = $('historyList');
+                list.innerHTML = '';
+                $('historyEmpty').classList.toggle('hidden', items.length > 0);$('clearAllBtn').classList.toggle('hidden', items.length === 0);
+
+                items.forEach(it => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between border border-line rounded-xl p-2.5 hover:bg-mist text-xs cursor-pointer';
+                    
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'flex-1 pr-2';
+                    infoDiv.innerHTML = `<div class="font-semibold text-ink">${it.title}</div><div class="text-muted mt-1">${new Date(it.created_at).toLocaleString('id-ID')} (${it.tool_type.toUpperCase()})</div>`;
+                    infoDiv.onclick = async () => {
+                        const r = await fetch('/api/history/' + it.id);
+                        const d = await r.json();
+                        showResult(d);
+                    };
+
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.title = 'Hapus riwayat ini';
+                    delBtn.className = 'p-1.5 text-muted hover:text-brick hover:bg-brick-tint rounded-lg transition-colors';
+                    delBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
+                    delBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        if (!confirm('Hapus riwayat analisis ini?')) return;
+                        try {
+                            const res = await fetch('/api/history/' + it.id, { method: 'DELETE' });
+                            if (res.ok) {
+                                loadHistory();
+                            } else {
+                                alert('Gagal menghapus riwayat.');
+                            }
+                        } catch(err) {
+                            alert('Terjadi kesalahan koneksi.');
+                        }
+                    };
+
+                    li.appendChild(infoDiv);
+                    li.appendChild(delBtn);
+                    list.appendChild(li);
+                });
+            } catch(e) {}
+        }
+
+        $('clearAllBtn').addEventListener('click', async () => {
+            if (!confirm('Hapus SEMUA riwayat analisis? Tindakan ini tidak dapat dibatalkan.')) return;
+            try {
+                const res = await fetch('/api/history', { method: 'DELETE' });
+                if (res.ok) {
+                    loadHistory();
+                    $('resultContainer').classList.add('hidden');
+                }
+            } catch(e) {}
+        });
+
+        buildSlots();
+        setTool('tool1');
+        loadHistory();
+    </script>
+</body>
+</html>
